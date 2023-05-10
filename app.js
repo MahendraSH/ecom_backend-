@@ -10,4 +10,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/product",require("./routers/productRoutes"));
 app.use("/api/user",require("./routers/userRoutes"));
 
+// use error controller
+
+app.use(require("./middlewares/errorController"));
+
 module .exports =app;

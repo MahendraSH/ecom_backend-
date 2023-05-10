@@ -1,5 +1,6 @@
 const CatchAsycErrors = require("../middlewares/catchAsyncError");
 const userModels = require("../models/userModels");
+const ErrorHandler = require("../utils/ErrorHandler");
 
 const registor = CatchAsycErrors(async (req, res, next) => {
     const { name, email, password } = req.body;
