@@ -24,7 +24,6 @@ const isAuthenticatedUser = CatchAsycErrors(async (req, res, next) => {
 
 const autherizedRoles = (...roles) => {
     return (req, res, next) => {
-        // console.log(req.user);
         if (!roles.includes(req.user.role)) {
             return (next(new ErrorHandler(`Role (${req.user.role}) is not allowed to access this route`, 403)));
         }

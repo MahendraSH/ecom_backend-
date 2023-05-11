@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bycrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -53,8 +54,7 @@ userSchema.pre('save', async function (next) {
     }
     const SALT_KEY = Number(process.env.SALT_KEY) || 10;
     this.password = await bycrypt.hash(this.password, SALT_KEY);
-    console.log(this.password);
-    // console.log(SALT_KEY);
+  
 });
 
 userSchema.methods.comparePassword = async function (password) {
@@ -71,13 +71,21 @@ userSchema.methods.getJWTToken = function () {
 
 
 
-userSchema.methods.getResetPasswordToken = function () {
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
-    return resetToken;
-};
+// userSchema.methods.getResetPasswordToken = function () {
+//     const resetToken = crypto.randomBytes(20).toString('hex');
+//     this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+//     this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+//     return resetToken;
+// };
 
+//  genreate rested token using crypto
+userSchema.methods.generateResetToken = function () {
+    const restToken = crypto.randomBytes(Number(process.env.crytoToken_Random_bufferSize)).toString('hex');
+    this.resetPasswordToken = crypto.createHash(process.env.crypto_algo).update(restToken).digest('hex');
+    this.resetPasswordExpire = new Date(Date.now() + 15 * 60 * 1000);
+
+    return restToken;
+}
 
 
 
