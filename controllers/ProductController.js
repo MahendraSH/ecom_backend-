@@ -1,6 +1,7 @@
 const CatchAsycErrors = require("../middlewares/catchAsyncError");
 const productModel = require("../models/productModel");
 const ErrorHandler = require("../utils/ErrorHandler");
+const ApiFeatures = require("../utils/features");
 
 const createProduct = CatchAsycErrors(async (req, res, next) => {
 
@@ -14,7 +15,8 @@ const createProduct = CatchAsycErrors(async (req, res, next) => {
 );
 
 const getAllProducts = CatchAsycErrors(async (req, res, next) => {
-    const products = await productModel.find();
+    const apiFeatures = new ApiFeatures(productModel.find(), req.query).search().filter().pagination(10);
+    const products = await apiFeatures.query;
     res.status(200).json({
         success: true,
         products
@@ -43,16 +45,16 @@ const updateProduct = CatchAsycErrors(async (req, res, next) => {
 
         return (next(new ErrorHandler("Product not found", 404)));
     }
-   product = await productModel.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-    useFindAndModify: false
-   });
+    product = await productModel.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false
+    });
 
-   product=await productModel.findById(req.params.id);
+    product = await productModel.findById(req.params.id);
     res.status(200).json({
         success: true,
-       product,
+        product,
     })
 });
 
@@ -61,7 +63,7 @@ const deleteProduct = CatchAsycErrors(async (req, res, next) => {
     if (!product) {
         return (next(new ErrorHandler("Product not found", 404)));
     }
-     await product.deleteOne();
+    await product.deleteOne();
     res.status(200).json({
         success: true,
         message: "Product deleted successfully"
