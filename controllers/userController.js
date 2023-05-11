@@ -3,7 +3,9 @@ const userModels = require("../models/userModels");
 const ErrorHandler = require("../utils/ErrorHandler");
 const sendTokenCooki = require("../utils/sendTokenCooki");
 const sendEmail = require("../utils/sendEmail");
-``
+
+const crypto = require("crypto");
+
 const registor = CatchAsycErrors(async (req, res, next) => {
     const { name, email, password } = req.body;
     const user = await userModels.create({
@@ -48,9 +50,9 @@ const logout = CatchAsycErrors(async (req, res, next) => {
 });
 
 const forgotPassword = CatchAsycErrors(async (req, res, next) => {
-    const email= req.body.email;
-    if(!email){
-        return (next(new ErrorHandler("please enter email",400)));
+    const email = req.body.email;
+    if (!email) {
+        return (next(new ErrorHandler("please enter email", 400)));
     }
     const user = await userModels.findOne({ email });
     if (!user) {
@@ -58,15 +60,15 @@ const forgotPassword = CatchAsycErrors(async (req, res, next) => {
         return (next(new ErrorHandler("user not found", 404)));
     }
 
-        const resetPasswordToken = user.generateResetToken();
-    
+    const resetPasswordToken = user.generateResetToken();
+
 
     await user.save({ validateBeforeSave: false });
     // create reset password url
 
     const restPasswordurl = `${req.protocol}://${req.get(
         "host"
-    )}/api/user/reset${resetPasswordToken}`;
+    )}/api/user/reset/${resetPasswordToken}`;
     const message = `your password reset token is as follow:\n\n${restPasswordurl}\n\nif you have not requested this email then ignore it`;
     try {
         await sendEmail({
@@ -88,35 +90,35 @@ const forgotPassword = CatchAsycErrors(async (req, res, next) => {
 });
 // resetPassword
 const restPassword = CatchAsycErrors(async (req, res, next) => {
-const resetPasswordToken = crypto
-    .createHash(process.env.crypto_algo)
-    .update(req.params.link)
-    .digest('hex');
-const user = await User.findOne({
-    resetPasswordToken,
-    restPasswordExpire: { $gt: Date.now() },
-},)
-if (!user) {
-    return next(new ErrorHandler("The reset password  link is invalid or expired ", 400))
-}
+    const resetPasswordToken = crypto
+        .createHash(process.env.crypto_algo)
+        .update(req.params.link)
+        .digest('hex');
+    const user = await userModels.findOne({
+        resetPasswordToken,
+        resetPasswordExpire: { $gt: Date.now() },
+    },)
+    if (!user) {
+        return next(new ErrorHandler("The reset password  link is invalid or expired ", 400))
+    }
 
 
-const password = req.body.password;
-const conformPassword = req.body.conformPassword;
-if (!password || !conformPassword) {
-    return next(new ErrorHandler(" The password : is required please enter it , The conformPassword : is required please enter it and both must be same", 400));
-}
-if (password !== conformPassword) {
+    const password = req.body.password;
+    const conformPassword = req.body.conformPassword;
+    if (!password || !conformPassword) {
+        return next(new ErrorHandler(" The password : is required please enter it , The conformPassword : is required please enter it and both must be same", 400));
+    }
+    if (password !== conformPassword) {
 
-    return next(new ErrorHandler("please enter the same passwords ", 400));
+        return next(new ErrorHandler("please enter the same passwords ", 400));
 
-}
-user.resetPasswordToken = undefined;
-user.password = password;
-user.restPasswordExpire = undefined;
-await user.save();
-sendTokenCooki(user, 200, res);
-a
+    }
+    user.resetPasswordToken = undefined;
+    user.password = password;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+    sendTokenCooki(user, 200, res);
+    
 });
 
 
@@ -170,4 +172,14 @@ const deleteUser = CatchAsycErrors(async (req, res, next) => {
     })
 });
 
-module.exports = { registor, getAllusers, getUserById, updateUser, login, logout ,forgotPassword,restPassword};
+module.exports = {
+    registor,
+    getAllusers,
+    getUserById,
+    updateUser,
+    deleteUser,
+    login,
+    logout,
+    forgotPassword,
+    restPassword
+};

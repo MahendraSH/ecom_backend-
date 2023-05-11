@@ -54,7 +54,7 @@ userSchema.pre('save', async function (next) {
     }
     const SALT_KEY = Number(process.env.SALT_KEY) || 10;
     this.password = await bycrypt.hash(this.password, SALT_KEY);
-  
+
 });
 
 userSchema.methods.comparePassword = async function (password) {
