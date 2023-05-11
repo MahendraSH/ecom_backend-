@@ -6,6 +6,8 @@ const sendEmail = require("../utils/sendEmail");
 
 const crypto = require("crypto");
 
+// auth user conrollers 
+//  registor users 
 const registor = CatchAsycErrors(async (req, res, next) => {
     const { name, email, password } = req.body;
     const user = await userModels.create({
@@ -21,6 +23,7 @@ const registor = CatchAsycErrors(async (req, res, next) => {
     sendTokenCooki(user, 201, res);
 });
 
+// login user 
 const login = CatchAsycErrors(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -37,7 +40,7 @@ const login = CatchAsycErrors(async (req, res, next) => {
     sendTokenCooki(user, 200, res);
 });
 
-
+//  logout user
 const logout = CatchAsycErrors(async (req, res, next) => {
     res.cookie("token", null, {
         expires: new Date(Date.now()),
@@ -48,6 +51,8 @@ const logout = CatchAsycErrors(async (req, res, next) => {
         message: "logged out"
     })
 });
+
+// forgot password user 
 
 const forgotPassword = CatchAsycErrors(async (req, res, next) => {
     const email = req.body.email;
@@ -88,7 +93,7 @@ const forgotPassword = CatchAsycErrors(async (req, res, next) => {
 
     }
 });
-// resetPassword
+// resetPassword user
 const restPassword = CatchAsycErrors(async (req, res, next) => {
     const resetPasswordToken = crypto
         .createHash(process.env.crypto_algo)
@@ -120,9 +125,62 @@ const restPassword = CatchAsycErrors(async (req, res, next) => {
     sendTokenCooki(user, 200, res);
     
 });
+//  user`s profile user controllers 
+//  my profile details
+const myProfile = CatchAsycErrors(async (req, res, next) => {
 
+    const user = await userModels.findById(req.user.id);
+    
+    res.status(200).json({
+        success: true,
+        user
+    });
+});
 
+//  update by profile password 
+const updateProfilePassword = CatchAsycErrors(async (req, res, next) => {
+    const user = await userModels.findById(req.user.id).select("+password");
+    if(!req.body.oldPassword){
+        return (next(new ErrorHandler("please enter old password",400)));
+    }
+    if(!req.body.newPassword){
+        
+        return (next(new ErrorHandler("please enter new password",400)));
+    }
+    if(!req.body.conformPassword){
+        
+        return (next(new ErrorHandler("please enter conform password",400)));
+    }
+    const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
+    if (!isPasswordMatched) {
+        return (next(new ErrorHandler("old password is incorrect", 400)));
+    }
+    if (req.body.newPassword !== req.body.conformPassword) {
+        return (next(new ErrorHandler("new password and conform password are not same", 400)));
+    }
+    user.password = req.body.newPassword;
+    await user.save();
+    sendTokenCooki(user, 200, res);
+});
 
+const updateProfile = CatchAsycErrors(async (req, res, next) => {
+    const newUserData = {
+        name: req.body.name,
+        email: req.body.email,
+        //  add cloudinary later for avtar image update 
+    };
+    const user = await userModels.findByIdAndUpdate(req.user.id, newUserData, {
+        new: true,
+        runValidators: true,
+        useFindAndModify: false
+    });
+    res.status(200).json({
+        success: true,
+    });
+});
+//  admin user controllers
+
+// get all users
 const getAllusers = CatchAsycErrors(async (req, res, next) => {
     const users = await userModels.find();
     res.status(200).json({
@@ -132,6 +190,8 @@ const getAllusers = CatchAsycErrors(async (req, res, next) => {
 });
 
 
+
+// get user by id
 const getUserById = CatchAsycErrors(async (req, res, next) => {
 
     const user = await userModels.findById(req.params.id);
@@ -144,7 +204,27 @@ const getUserById = CatchAsycErrors(async (req, res, next) => {
         user
     })
 });
+// update user role 
+const updateUserRole = CatchAsycErrors(async (req, res, next) => {
+   const user = await userModels.findById(req.params.id);
+   
+    if (!user) {
 
+        return (next(new ErrorHandler("user not found", 404)));
+    }
+    if(!req.body.role){
+        return (next(new ErrorHandler("please enter role", 400)));
+    }
+    user.role = req.body.role;
+    await user.save();
+    res.status(200).json({
+        success: true,
+        user
+    })
+});
+
+
+// update user
 const updateUser = CatchAsycErrors(async (req, res, next) => {
     const user = await userModels.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
@@ -160,6 +240,8 @@ const updateUser = CatchAsycErrors(async (req, res, next) => {
         user
     })
 });
+
+// delete user
 const deleteUser = CatchAsycErrors(async (req, res, next) => {
     const user = await userModels.findByIdAndDelete(req.params.id);
     if (!user) {
@@ -172,6 +254,9 @@ const deleteUser = CatchAsycErrors(async (req, res, next) => {
     })
 });
 
+//  product review create and upate 
+
+
 module.exports = {
     registor,
     getAllusers,
@@ -181,5 +266,10 @@ module.exports = {
     login,
     logout,
     forgotPassword,
-    restPassword
+    restPassword,
+    myProfile,
+    updateProfilePassword,
+   updateProfile,
+   updateUserRole,
+
 };
