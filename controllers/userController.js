@@ -86,6 +86,38 @@ const forgotPassword = CatchAsycErrors(async (req, res, next) => {
 
     }
 });
+// resetPassword
+const restPassword = CatchAsycErrors(async (req, res, next) => {
+const resetPasswordToken = crypto
+    .createHash(process.env.crypto_algo)
+    .update(req.params.link)
+    .digest('hex');
+const user = await User.findOne({
+    resetPasswordToken,
+    restPasswordExpire: { $gt: Date.now() },
+},)
+if (!user) {
+    return next(new ErrorHandler("The reset password  link is invalid or expired ", 400))
+}
+
+
+const password = req.body.password;
+const conformPassword = req.body.conformPassword;
+if (!password || !conformPassword) {
+    return next(new ErrorHandler(" The password : is required please enter it , The conformPassword : is required please enter it and both must be same", 400));
+}
+if (password !== conformPassword) {
+
+    return next(new ErrorHandler("please enter the same passwords ", 400));
+
+}
+user.resetPasswordToken = undefined;
+user.password = password;
+user.restPasswordExpire = undefined;
+await user.save();
+sendTokenCooki(user, 200, res);
+a
+});
 
 
 
@@ -138,4 +170,4 @@ const deleteUser = CatchAsycErrors(async (req, res, next) => {
     })
 });
 
-module.exports = { registor, getAllusers, getUserById, updateUser, login, logout ,forgotPassword};
+module.exports = { registor, getAllusers, getUserById, updateUser, login, logout ,forgotPassword,restPassword};
