@@ -2,7 +2,7 @@
 const app = require('./app');
 const dbConnect = require('./config/DBconnect');
 const cloudinary = require('cloudinary');
-const dotenv = require('dotenv').config({ path: './config/.env' });
+const dotenv = require('dotenv').config({ path: './config/.env.local' });
 
 //  handling uncaught exception
 
