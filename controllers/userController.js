@@ -140,17 +140,9 @@ const myProfile = CatchAsycErrors(async (req, res, next) => {
 //  update by profile password 
 const updateProfilePassword = CatchAsycErrors(async (req, res, next) => {
     const user = await userModels.findById(req.user.id).select("+password");
-    if(!req.body.oldPassword){
-        return (next(new ErrorHandler("please enter old password",400)));
-    }
-    if(!req.body.newPassword){
-        
-        return (next(new ErrorHandler("please enter new password",400)));
-    }
-    if(!req.body.conformPassword){
-        
-        return (next(new ErrorHandler("please enter conform password",400)));
-    }
+   if(!req.body.oldPassword|| !req.body.newPassword || !req.body.conformPassword){
+       return (next(new ErrorHandler(" oldPassword,newPassword,conformPassword are required", 400)));
+   }    
     const isPasswordMatched = await user.comparePassword(req.body.oldPassword);
     if (!isPasswordMatched) {
         return (next(new ErrorHandler("old password is incorrect", 400)));
@@ -176,6 +168,7 @@ const updateProfile = CatchAsycErrors(async (req, res, next) => {
     });
     res.status(200).json({
         success: true,
+        user
     });
 });
 //  admin user controllers
@@ -254,7 +247,6 @@ const deleteUser = CatchAsycErrors(async (req, res, next) => {
     })
 });
 
-//  product review create and upate 
 
 
 module.exports = {

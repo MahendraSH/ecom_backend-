@@ -33,6 +33,8 @@ router.route('/:id')
     .get(isAuthenticatedUser, autherizedRoles('admin'), getUserById)
     .put(isAuthenticatedUser, autherizedRoles('admin'), updateUser)
     .delete(isAuthenticatedUser, autherizedRoles('admin'), deleteUser)
+    
+router.route('/role/:id')
     .put(isAuthenticatedUser, autherizedRoles('admin'), updateUserRole);
 
 
